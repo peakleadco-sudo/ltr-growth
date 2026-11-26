@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LTR Growth
 
-## Getting Started
+**Your entire marketing department. Powered by AI.** — an all-in-one AI marketing platform by LTRMarketing.
 
-First, run the development server:
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Auth, Postgres, Storage, RLS) · OpenAI-compatible AI · Stripe · Resend.
+
+See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) for what's built, what needs credentials, and known limitations.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in Supabase values at minimum
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without Supabase variables the public website works, and the login/sign-up pages explain what to configure.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 1. Supabase setup (required)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a project at [supabase.com](https://supabase.com) (free tier is fine).
+2. **Project Settings → API**: copy the Project URL, `anon` key and `service_role` key into `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. The service role key is server-only — never prefix it with `NEXT_PUBLIC_`.
+3. Apply the migrations in `supabase/migrations` in order. Either:
+   - Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`, or
+   - paste each file into the SQL editor in filename order.
+4. **Storage**: migration 3 creates the private `brand-assets` bucket automatically. If it reports that storage wasn't available, create a **private** bucket named `brand-assets` in the dashboard. All file access goes through the server with short-lived signed URLs.
+5. **Authentication → URL Configuration**: set Site URL to your domain and add `https://<your-domain>/auth/callback` (and `http://localhost:3000/auth/callback`) to Redirect URLs.
+6. **Authentication → Providers → Email**: keep "Confirm email" on. Configure custom SMTP for production sending.
+7. (Optional) **Google sign-in**: enable the Google provider with your Google OAuth client, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
+8. **Make yourself an admin** (SQL editor): `update public.profiles set platform_role = 'admin' where email = 'you@example.com';`
 
-## Learn More
+Development seed data (`supabase/seed.sql`) creates a clearly labelled demo account. Never run it in production.
 
-To learn more about Next.js, take a look at the following resources:
+## 2. AI provider
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Set `OPENAI_API_KEY`. Models are configurable (`OPENAI_TEXT_MODEL`, and the `ai_settings` table). All AI calls are server-side; website content is passed as untrusted data with prompt-injection guardrails. Without a key, onboarding still extracts facts stated directly on the user's website, and AI features show a "not configured" state.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 3. Other integrations
 
-## Deploy on Vercel
+| Service | Variables | Used for | Phase |
+|---|---|---|---|
+| Firecrawl | `FIRECRAWL_API_KEY` | Multi-page crawling (built-in fetcher otherwise) | 1, 3 |
+| PageSpeed Insights | `PAGESPEED_API_KEY` | Verified performance data | 3 |
+| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Subscriptions & credits | 4 |
+| Resend | `RESEND_API_KEY`, `EMAIL_FROM`, `AGENCY_NOTIFICATION_EMAIL` | Lead notifications | 5 |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Admins can see which integrations are configured at `/admin`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Testing
+
+```bash
+npm run typecheck
+npm run lint
+npm test                 # unit tests (URL/SSRF guards, extraction, schemas, uploads, readiness)
+npm run test:db          # migrations + RLS + credit ledger tests against a local Postgres
+                         # (set PGHOST/PGPORT/PGUSER; needs a superuser on a throwaway server)
+```
+
+## Architecture
+
+- `src/app/(marketing)` public, statically rendered SEO pages · `src/app/(auth)` auth · `src/app/app` the authenticated app · `src/app/admin` admin portal (server-side role check) · `src/app/api` route handlers.
+- `src/lib/workspace.ts` loads the signed-in user's workspace through RLS. `src/lib/supabase/admin.ts` is the only service-role client and is used only after server-side authorization.
+- `src/lib/ai/*` provider-agnostic AI layer and per-tool prompts. `src/lib/services/website/*` SSRF-hardened fetching and HTML extraction.
+- `supabase/migrations` schema, RLS policies, credit ledger functions (`consume_credits`, `refund_credits`, idempotent by key), rate limiting and default plan configuration.
