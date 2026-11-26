@@ -81,7 +81,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Button asChild variant="secondary"><Link href="/app/assistant"><Sparkles className="text-accent" /> Ask LTR AI</Link></Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Readiness */}
         <Card className="lg:col-span-1">
           <CardHeader>
@@ -154,13 +154,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <UsageRow label="Website audits" used={credits.auditsUsed} total={credits.auditsTotal} />
             <div className="flex items-center justify-between border-t border-border pt-3 text-[12px]">
               <span className="text-muted">Subscription: <span className="capitalize text-fg">{ws.subscription.status.replace("_", " ")}</span></span>
-              <Link href="/app/subscription" className="inline-flex items-center gap-1 text-fg hover:underline"><CreditCard className="size-3.5" /> Manage</Link>
+              <span className="flex gap-3"><Link href="/app/history" className="text-muted hover:text-fg hover:underline">History</Link><Link href="/app/subscription" className="inline-flex items-center gap-1 text-fg hover:underline"><CreditCard className="size-3.5" /> Manage</Link></span>
             </div>
           </CardBody>
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
         {/* Tasks */}
         <Card>
           <CardHeader>
@@ -203,7 +203,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader><CardTitle>Content calendar · next 7 days</CardTitle><CalendarDays className="size-4 text-subtle" /></CardHeader>
           <CardBody>
@@ -226,7 +226,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {adsRes.data?.length ? (
               <ul className="space-y-2">
                 {adsRes.data.map((a) => (
-                  <li key={a.id} className="flex items-center gap-3 text-[13px]"><span className="flex-1 truncate">{a.title}</span><Badge>{a.platform}</Badge></li>
+                  <li key={a.id}><Link href={`/app/ads?ad=${a.id}`} className="flex items-center gap-3 text-[13px] hover:text-fg"><span className="flex-1 truncate hover:underline">{a.title}</span><Badge>{a.platform}</Badge></Link></li>
                 ))}
               </ul>
             ) : <EmptyState title="No ads generated yet" description="Create your first campaign in the Ad Studio." className="py-6" />}

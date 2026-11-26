@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { DropdownMenu } from "radix-ui";
-import { Bell, Building2, Check, ChevronsUpDown, LogOut, Menu, Plus, Settings, Sparkles, User } from "lucide-react";
+import { Bell, Building2, Check, ChevronsUpDown, LogOut, Menu, Plus, Settings, Sparkles, User, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { markNotificationsRead, setActiveBusiness } from "@/app/app/actions";
 import { cn, formatDate, initials } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function Topbar({ onMenu, user, businesses, activeBusinessId, canAddBusin
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-bg/85 px-3 backdrop-blur-xl sm:px-6">
+    <header className="app-chrome sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-bg/85 px-3 backdrop-blur-xl sm:px-6">
       <button onClick={onMenu} className="rounded-md p-2 text-muted hover:text-fg lg:hidden" aria-label="Open navigation">
         <Menu className="size-5" />
       </button>
@@ -76,6 +76,10 @@ export function Topbar({ onMenu, user, businesses, activeBusinessId, canAddBusin
       </DropdownMenu.Root>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <Link href="/app/assistant" className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] text-muted hover:border-border-strong hover:text-fg" aria-label="Ask LTR AI">
+          <MessageCircle className="size-3.5 text-accent" />
+          <span className="hidden md:inline">Ask LTR AI</span>
+        </Link>
         <Link href="/app/subscription" className="hidden items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-[12px] text-muted hover:border-border-strong hover:text-fg sm:flex" title="AI text credits remaining this period">
           <Sparkles className="size-3.5 text-accent" />
           <span className="tabular-nums"><span className="text-fg">{credits.remaining}</span> credits</span>

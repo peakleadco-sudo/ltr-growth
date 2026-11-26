@@ -6,6 +6,8 @@ import { creditSummary, requireWorkspace } from "@/lib/workspace";
 import { getPublicPlans } from "@/lib/public-data";
 import { isIntegrationConfigured } from "@/lib/env";
 import { formatDate } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { PlanButton } from "./plan-button";
 
 export const metadata: Metadata = { title: "Subscription" };
@@ -13,6 +15,13 @@ export const metadata: Metadata = { title: "Subscription" };
 export default async function SubscriptionPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const ws = await requireWorkspace();
+  const supabase = await createClient();
+  const { data: txs } = await supabase
+    .from("credit_transactions")
+    .select("id, credit_type, amount, reason, created_at")
+    .eq("organization_id", ws.organization.id)
+    .order("created_at", { ascending: false })
+    .limit(15);
   const { plans } = await getPublicPlans();
   const c = creditSummary(ws);
   const stripeReady = isIntegrationConfigured("stripe") && isIntegrationConfigured("stripe_webhook");
@@ -69,6 +78,26 @@ export default async function SubscriptionPage({ searchParams }: { searchParams:
           ))}
         </div>
       </div>
+      <Card className="mt-6">
+        <CardHeader>
+          <div><CardTitle>Recent credit activity</CardTitle><CardDescription>Charges for AI generations and refunds for failed ones</CardDescription></div>
+          <Link href="/app/history" className="text-[13px] text-muted hover:text-fg hover:underline">AI history</Link>
+        </CardHeader>
+        <CardBody className="py-1">
+          {(txs ?? []).length === 0 ? (
+            <p className="py-6 text-center text-[13px] text-subtle">No credit activity this period.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {(txs ?? []).map((t) => (
+                <li key={t.id} className="flex items-center justify-between py-2 text-[13px]">
+                  <span className="text-muted">{t.reason === "refund" ? "Refund (failed generation)" : t.reason === "generation" ? "AI generation" : t.reason === "purchase" ? "Credits purchased" : t.reason} · {t.credit_type}</span>
+                  <span className="flex items-center gap-4"><span className="text-[12px] text-subtle">{formatDate(t.created_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span><span className={t.amount < 0 ? "tabular-nums" : "tabular-nums text-success"}>{t.amount > 0 ? `+${t.amount}` : t.amount}</span></span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardBody>
+      </Card>
     </div>
   );
 }

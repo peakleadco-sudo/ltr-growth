@@ -138,6 +138,8 @@ export type MarketingTask = {
   priority: "high" | "medium" | "low";
   status: "todo" | "in_progress" | "done" | "skipped";
   due_date: string | null;
+  week_number?: number | null;
+  strategy_id?: string | null;
   source: "manual" | "strategy" | "audit" | "onboarding" | "campaign";
   completed_at: string | null;
   is_demo: boolean;

@@ -9,7 +9,12 @@ import { computeReadiness } from "@/lib/readiness";
 export const metadata: Metadata = { title: "Work With LTRMarketing" };
 
 /** In-app agency page with recommendations based on the user's real gaps. */
-export default async function InAppAgencyPage() {
+const SERVICE_KEYS = new Set(["managed_advertising", "website_design", "seo", "google_business_profile", "content_production", "marketing_strategy", "growth_consulting", "ai_automation"]);
+
+export default async function InAppAgencyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams;
+  const requestedService = typeof sp.service === "string" && SERVICE_KEYS.has(sp.service) ? sp.service : null;
+  const fromTool = typeof sp.source === "string" ? sp.source.replace(/[^a-z_]/g, "").slice(0, 40) : null;
   const ws = await requireWorkspace();
   const bp = ws.activeBusiness!;
   const supabase = await createClient();
@@ -37,9 +42,9 @@ export default async function InAppAgencyPage() {
         <CardBody className="p-6">
           <h2 className="mb-5 text-lg font-semibold">Request a free strategy call</h2>
           <ConsultationForm
-            source="in_app"
-            sourceContext={{ business_profile_id: bp.id, readiness: r.score }}
-            defaults={{ name: ws.profile.full_name ?? "", email: ws.profile.email ?? "", business_name: bp.name, website: bp.website_url ?? "", industry: bp.industry ?? "", services: recs.map((x) => x.service) }}
+            source={fromTool ? `in_app_${fromTool}` : "in_app"}
+            sourceContext={{ business_profile_id: bp.id, readiness: r.score, ...(fromTool ? { tool: fromTool } : {}) }}
+            defaults={{ name: ws.profile.full_name ?? "", email: ws.profile.email ?? "", business_name: bp.name, website: bp.website_url ?? "", industry: bp.industry ?? "", services: requestedService ? [requestedService] : recs.map((x) => x.service) }}
           />
         </CardBody>
       </Card>

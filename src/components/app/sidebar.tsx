@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ChevronDown, ChevronsLeft, ChevronsRight, Lock, X, type LucideIcon,
-  Calculator, CalendarDays, Circle, CreditCard, Flag, FolderOpen, Gauge, Handshake, Image, LayoutDashboard, LifeBuoy, LineChart, ListChecks, Mail, MapPin, Megaphone, MessageSquareText, Palette, PenLine, Search, Settings, ShieldCheck, Sparkles, Swords, Target,
+  Calculator, CalendarDays, Circle, CreditCard, Flag, FolderOpen, Gauge, Handshake, History, Image, LayoutDashboard, LifeBuoy, LineChart, ListChecks, Mail, MapPin, Megaphone, MessageSquareText, Palette, PenLine, Search, Settings, ShieldCheck, Sparkles, Swords, Target,
 } from "lucide-react";
 
-const ICONS: Record<string, LucideIcon> = { Calculator, CalendarDays, Circle, CreditCard, Flag, FolderOpen, Gauge, Handshake, Image, LayoutDashboard, LifeBuoy, LineChart, ListChecks, Mail, MapPin, Megaphone, MessageSquareText, Palette, PenLine, Search, Settings, ShieldCheck, Sparkles, Swords, Target };
+const ICONS: Record<string, LucideIcon> = { Calculator, CalendarDays, Circle, CreditCard, Flag, FolderOpen, Gauge, Handshake, History, Image, LayoutDashboard, LifeBuoy, LineChart, ListChecks, Mail, MapPin, Megaphone, MessageSquareText, Palette, PenLine, Search, Settings, ShieldCheck, Sparkles, Swords, Target };
 import { Logo, LogoMark } from "@/components/marketing/logo";
 import { NAV, type NavItem } from "@/lib/features";
 import { cn } from "@/lib/utils";
@@ -135,14 +135,14 @@ export function Sidebar({ entitlements, isAdmin, mobileOpen, onMobileClose }: Pr
     <>
       <aside
         className={cn(
-          "sticky top-0 hidden h-screen shrink-0 border-r border-border bg-bg transition-[width] duration-200 lg:block",
+          "app-chrome sticky top-0 hidden h-screen shrink-0 border-r border-border bg-bg transition-[width] duration-200 lg:block",
           collapsed ? "w-[60px]" : "w-[248px]",
         )}
       >
         {content(false)}
       </aside>
       {/* Mobile drawer */}
-      <div className={cn("fixed inset-0 z-50 lg:hidden", mobileOpen ? "pointer-events-auto" : "pointer-events-none")} aria-hidden={!mobileOpen}>
+      <div className={cn("app-chrome fixed inset-0 z-50 lg:hidden", mobileOpen ? "pointer-events-auto" : "pointer-events-none")} aria-hidden={!mobileOpen}>
         <div className={cn("absolute inset-0 bg-black/70 transition-opacity", mobileOpen ? "opacity-100" : "opacity-0")} onClick={onMobileClose} />
         <aside className={cn("absolute inset-y-0 left-0 w-[280px] border-r border-border bg-bg transition-transform duration-200", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
           {content(true)}

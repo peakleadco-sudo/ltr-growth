@@ -33,7 +33,7 @@ Development seed data (`supabase/seed.sql`) creates a clearly labelled demo acco
 
 ## 2. AI provider
 
-Set `OPENAI_API_KEY`. Models are configurable (`OPENAI_TEXT_MODEL`, and the `ai_settings` table). All AI calls are server-side; website content is passed as untrusted data with prompt-injection guardrails. Without a key, onboarding still extracts facts stated directly on the user's website, and AI features show a "not configured" state.
+Set `OPENAI_API_KEY` (any OpenAI-compatible endpoint works via `OPENAI_BASE_URL`). The model, output-token cap and pricing used for cost estimates live in the `ai_settings` table; per-tool prompt, model and credit-cost overrides go in `prompt_templates`. `OPENAI_TEXT_MODEL` overrides the database model if set. The service role key is also required, because usage is recorded server-side. All AI calls are server-side; website content is passed as untrusted data with prompt-injection guardrails. Without a key, onboarding still extracts facts stated directly on the user's website, and AI features show a "not configured" state.
 
 ## 3. Other integrations
 
@@ -51,7 +51,7 @@ Admins can see which integrations are configured at `/admin`.
 ```bash
 npm run typecheck
 npm run lint
-npm test                 # unit tests (URL/SSRF guards, extraction, schemas, uploads, readiness)
+npm test                 # unit tests (SSRF guards, extraction, schemas, uploads, readiness, AI engine and tools)
 npm run test:db          # migrations + RLS + credit ledger tests against a local Postgres
                          # (set PGHOST/PGPORT/PGUSER; needs a superuser on a throwaway server)
 ```
@@ -60,5 +60,5 @@ npm run test:db          # migrations + RLS + credit ledger tests against a loca
 
 - `src/app/(marketing)` public, statically rendered SEO pages · `src/app/(auth)` auth · `src/app/app` the authenticated app · `src/app/admin` admin portal (server-side role check) · `src/app/api` route handlers.
 - `src/lib/workspace.ts` loads the signed-in user's workspace through RLS. `src/lib/supabase/admin.ts` is the only service-role client and is used only after server-side authorization.
-- `src/lib/ai/*` provider-agnostic AI layer and per-tool prompts. `src/lib/services/website/*` SSRF-hardened fetching and HTML extraction.
+- `src/lib/ai/*` provider-agnostic AI layer: `engine.ts` (credits, validation, refunds), `tools/*` (one definition per tool: input schema, output schema, prompts, credit cost), `assistant.ts` (LTR AI). `src/app/api/ai/[tool]` and `src/app/api/assistant` are the only AI endpoints. `src/lib/services/website/*` SSRF-hardened fetching and HTML extraction.
 - `supabase/migrations` schema, RLS policies, credit ledger functions (`consume_credits`, `refund_credits`, idempotent by key), rate limiting and default plan configuration.
