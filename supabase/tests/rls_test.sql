@@ -166,6 +166,33 @@ do $$ begin
 end $$;
 select pg_temp.expect_error(format('insert into public.ai_generations (organization_id, tool) values (%L, %L)', :'alice_org', 'x'));
 
+-- ---- Phase 2: AI tool tables ----
+reset role;
+insert into public.ai_generations (organization_id, tool, status) values (:'bob_org', 'ad_studio', 'succeeded') returning id as bob_gen \gset
+insert into public.ai_conversations (organization_id, user_id, title) values (:'alice_org', '00000000-0000-0000-0000-00000000000a', 'Chat') returning id as alice_conv \gset
+insert into public.ai_messages (conversation_id, organization_id, role, content) values (:'alice_conv', :'alice_org', 'assistant', 'Hello');
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+-- Cannot link saved content to another tenant's generation.
+select pg_temp.expect_error(format('insert into public.generated_ads (organization_id, platform, title, generation_id) values (%L, %L, %L, %L)', :'alice_org', 'meta', 'x', :'bob_gen'), 'TENANT_MISMATCH');
+select pg_temp.expect_error(format('insert into public.website_copies (organization_id, page_type, title, generation_id) values (%L, %L, %L, %L)', :'alice_org', 'home', 'x', :'bob_gen'), 'TENANT_MISMATCH');
+insert into public.website_copies (organization_id, business_profile_id, page_type, title) values (:'alice_org', :'alice_bp', 'home', 'Home v1');
+-- Assistant messages are server-written; users may only toggle is_saved.
+select pg_temp.expect_error(format('insert into public.ai_messages (conversation_id, organization_id, role, content) values (%L, %L, %L, %L)', :'alice_conv', :'alice_org', 'assistant', 'forged'));
+update public.ai_messages set content = 'tampered', is_saved = true;
+do $$ begin
+  assert (select content from public.ai_messages) = 'Hello', 'message content protected';
+  assert (select is_saved from public.ai_messages), 'message save allowed';
+end $$;
+-- Bob cannot see Alice's copy or conversation.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+do $$ begin
+  assert (select count(*) from public.website_copies) = 0, 'bob cannot see alice copy';
+  assert (select count(*) from public.ai_conversations) = 0, 'bob cannot see alice conversation';
+  assert (select count(*) from public.ai_messages) = 0, 'bob cannot see alice messages';
+end $$;
+reset role;
+
 -- ---- Anonymous visitors ----
 set role anon;
 select set_config('request.jwt.claim.sub', '', false);

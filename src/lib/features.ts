@@ -53,7 +53,7 @@ export const NAV: NavSection[] = [
     label: "Overview",
     items: [
       { label: "Dashboard", href: "/app", icon: "LayoutDashboard", status: "available" },
-      { label: "LTR AI", href: "/app/assistant", icon: "Sparkles", feature: "assistant", status: "upcoming", release: "Phase 2", description: "A marketing assistant that knows your business profile, brand kit and history." },
+      { label: "LTR AI", href: "/app/assistant", icon: "Sparkles", feature: "assistant", status: "available", description: "A marketing assistant that knows your business profile, brand kit and history." },
       { label: "Marketing Tasks", href: "/app/tasks", icon: "ListChecks", status: "available" },
     ],
   },
@@ -61,11 +61,11 @@ export const NAV: NavSection[] = [
     id: "create",
     label: "Create",
     items: [
-      { label: "Ad Studio", href: "/app/ads", icon: "Megaphone", feature: "ad_studio", minPlan: "starter", status: "upcoming", release: "Phase 2", description: "Ad copy, hooks, scripts, audiences and campaign structures for Meta, Google, TikTok, Instagram, YouTube and LinkedIn." },
+      { label: "Ad Studio", href: "/app/ads", icon: "Megaphone", feature: "ad_studio", minPlan: "starter", status: "available", description: "Ad copy, hooks, scripts, audiences and campaign structures for Meta, Google, TikTok, Instagram, YouTube and LinkedIn." },
       { label: "Creative Studio", href: "/app/creative", icon: "Image", feature: "image_generation", minPlan: "growth", status: "upcoming", release: "Phase 6", description: "Branded static ads and social graphics with accurate text overlays in 1:1, 4:5, 9:16 and 16:9." },
-      { label: "Social Media Studio", href: "/app/social", icon: "MessageSquareText", feature: "social_studio", minPlan: "starter", status: "upcoming", release: "Phase 2", description: "Captions, carousels, reel scripts and 7, 14 or 30-day content strategies." },
-      { label: "Email & SMS", href: "/app/email", icon: "Mail", feature: "email_sms", minPlan: "starter", status: "upcoming", release: "Phase 2", description: "Sequences, promotions, follow-ups and SMS templates with subject line and A/B variations." },
-      { label: "Website Copywriter", href: "/app/copywriter", icon: "PenLine", feature: "website_copy", minPlan: "starter", status: "upcoming", release: "Phase 2", description: "Conversion-focused home, service, landing and location pages ready to paste into your site builder." },
+      { label: "Social Media Studio", href: "/app/social", icon: "MessageSquareText", feature: "social_studio", minPlan: "starter", status: "available", description: "Captions, carousels, reel scripts and 7, 14 or 30-day content strategies." },
+      { label: "Email & SMS", href: "/app/email", icon: "Mail", feature: "email_sms", minPlan: "starter", status: "available", description: "Sequences, promotions, follow-ups and SMS templates with subject line and A/B variations." },
+      { label: "Website Copywriter", href: "/app/copywriter", icon: "PenLine", feature: "website_copy", minPlan: "starter", status: "available", description: "Conversion-focused home, service, landing and location pages ready to paste into your site builder." },
     ],
   },
   {
@@ -83,12 +83,13 @@ export const NAV: NavSection[] = [
     id: "manage",
     label: "Manage",
     items: [
-      { label: "Marketing Strategy", href: "/app/strategy", icon: "Target", feature: "strategy", minPlan: "starter", status: "upcoming", release: "Phase 2", description: "30, 60 and 90-day plans that turn into tasks on your dashboard." },
+      { label: "Marketing Strategy", href: "/app/strategy", icon: "Target", feature: "strategy", minPlan: "starter", status: "available", description: "30, 60 and 90-day plans that turn into tasks on your dashboard." },
       { label: "Campaigns", href: "/app/campaigns", icon: "Flag", feature: "campaigns", minPlan: "growth", status: "upcoming", release: "Phase 6", description: "Plan campaigns, attach creative, track budgets and record results." },
       { label: "Content Calendar", href: "/app/calendar", icon: "CalendarDays", feature: "content_calendar", minPlan: "starter", status: "upcoming", release: "Phase 6", description: "Drag-and-drop planning with draft, approved, scheduled and published status." },
       { label: "Performance", href: "/app/performance", icon: "LineChart", feature: "performance", minPlan: "growth", status: "upcoming", release: "Phase 6", description: "Import or enter your real marketing results and get summaries and charts." },
       { label: "Brand Kit", href: "/app/brand-kit", icon: "Palette", feature: "brand_kit_basic", status: "available" },
       { label: "Saved Assets", href: "/app/assets", icon: "FolderOpen", status: "available" },
+      { label: "AI History", href: "/app/history", icon: "History", status: "available" },
     ],
   },
   {

@@ -1,6 +1,6 @@
 # LTR Growth — Implementation status
 
-Last updated: Phase 1 (core platform).
+Last updated: Phase 2 (core AI tools).
 
 ## 1. Completed (Phase 1)
 
@@ -32,6 +32,23 @@ Last updated: Phase 1 (core platform).
 - Credit ledger (`consume_credits` / `refund_credits` / `grant_purchased_credits`), idempotent by key, service-role only; database rate limiter.
 - Security headers, `noindex` on private areas, no credentials in client code.
 
+## 1b. Completed (Phase 2: core AI tools)
+
+**Shared AI pipeline** (`src/lib/ai/engine.ts`) — every tool follows spec §25:
+sign-in → plan entitlement → rate limit → idempotent credit reservation (`consume_credits`, keyed by a client request id so double submits never double charge) → saved business profile + brand kit context → tool prompt → provider call with strict JSON schema → schema validation → saved to `ai_generations` with tokens and estimated cost → automatic refund (`refund_credits`) and error log on any failure.
+- Model, output-token cap and pricing come from `ai_settings`; admins can override a tool's system prompt, model and credit cost with `prompt_templates` (no redeploy).
+- User inputs, profile data, website text, documents and chat history are wrapped as untrusted data; outputs never state facts the user didn't provide (assumptions are listed separately in every result).
+
+**Tools**
+- **LTR AI** (`/app/assistant`): conversations with history, business-specific starters, follow-up suggestions, document attachments (.txt/.md/.csv/.json), saved responses, Markdown export, "based on your profile" vs "assumptions" for every answer. Also reachable from the top bar everywhere. 1 credit per answer.
+- **Ad Studio** (`/app/ads`): 6 platforms; copy, headlines/descriptions with platform character limits, hooks, video/UGC/voiceover scripts, creative concepts, audiences, campaign structure, A/B tests, landing page and budget guidance. Regenerate any section, inline editing, save/reopen campaigns, creative brief export. 2 credits.
+- **Social Media Studio** (`/app/social`): posts for 6 platforms and 11 content types, or 7/14/30-day plans; editable post previews, CSV export, save as drafts with dates, saved-post library with draft/approved/scheduled/published status that the user sets (never claims to publish). 1–4 credits.
+- **Marketing Strategy** (`/app/strategy`): 30/60/90-day or custom; positioning, personas, channels, budget split (flags totals ≠ 100%), channel strategies, KPIs, testing roadmap and weekly tasks that become dashboard tasks with due dates; edit, archive, print/PDF, progress tracking. 3–4 credits.
+- **Website Copywriter** (`/app/copywriter`): 11 page types, 1 or 2 side-by-side versions, SEO title/meta preview with limits, copy as Markdown or HTML, save/reopen. 1–2 credits.
+- **Email & SMS** (`/app/email`): 11 campaign types, sequences up to 7 messages, subject lines, preview text, A/B variations, compliance checklist and consent reminder; nothing is sent. 1–2 credits.
+- **AI History** (`/app/history`): every generation with tool, credits and status, filters, star to save, reopen results; per-tool credit usage for the period. Subscription page shows charges and refunds. Admin shows 30-day AI usage, tokens, estimated cost and recent API errors.
+- Contextual, non-intrusive LTRMarketing CTAs on ads, strategy and copy results pre-fill the consultation form.
+
 ## 2. Credentials needed
 
 | Need | Variables | Blocks |
@@ -56,8 +73,9 @@ Last updated: Phase 1 (core platform).
 
 Done in this phase:
 - `npm run typecheck`, `npm run lint`, production build.
-- 42 unit tests: URL normalisation and SSRF guards, HTML extraction, schemas, upload validation, readiness scoring.
-- `npm run test:db`: migrations apply cleanly on Postgres; RLS isolation across tenants, role checks, credit ledger and idempotency, rate limiter.
+- 61 unit tests: URL normalisation and SSRF guards, HTML extraction, schemas, upload validation, readiness scoring, AI output schemas (strict-mode rules), input validation, prompt-injection wrapping, the generation engine (charge, refund on failure/invalid output, insufficient credits, duplicate requests, plan gating), strategy→task dates, CSV/Markdown export.
+- `npm run test:db`: migrations apply cleanly on Postgres; RLS isolation across tenants, role checks, credit ledger and idempotency, rate limiter, cross-tenant links to generations blocked, assistant messages can't be forged or edited by users.
+- Phase 2 browser walkthrough against a mocked Supabase + mocked OpenAI-compatible API: every tool generated, regenerated a section, saved and reopened; assistant chat and saving; history, subscription, dashboard and admin; no console errors; no horizontal overflow at 390px.
 - Browser checks (desktop + mobile) of every public page and every app page (against a mocked Supabase API): HTTP 200, no console errors, no horizontal overflow.
 
 Still needed (requires a real Supabase project):
@@ -67,7 +85,10 @@ Still needed (requires a real Supabase project):
 
 ## 5. Known limitations
 
-- Phase 2–7 tools (LTR AI, Ad/Creative/Social Studio, audits, competitors, strategy, local, email/SMS, copywriter, calculators, campaigns, performance, full admin) are placeholders that say so.
+- Phase 3–7 tools (Creative Studio, audits, SEO tools, competitors, local, calculators, campaigns, content calendar drag-and-drop, performance, full admin) are placeholders that say so.
+- LTR AI accepts text documents only (.txt/.md/.csv/.json); PDF/Word parsing is not implemented yet. Answers arrive in one piece (no streaming).
+- Strategy PDF export uses the browser's print-to-PDF; branded server-side PDFs are planned for Phase 3.
+- Real AI output quality has not been reviewed yet because no OpenAI key is configured; prompts may need tuning once real responses can be checked.
 - Billing is not live: plan buttons explain Stripe isn't configured.
 - Privacy policy and terms are templates and need legal review before launch.
 - Account deletion is a logged request processed by an admin, not instant.
@@ -76,7 +97,7 @@ Still needed (requires a real Supabase project):
 ## 6. Estimated API costs (rough, check current provider pricing)
 
 - Onboarding AI suggestion: ~2–3k tokens per analysis with a small model → well under $0.01. Free, rate limited to 6/hour and 20/day per user.
-- Typical Phase 2 text generation (ad set, post batch): ~1.5–4k tokens → roughly $0.001–$0.02 depending on model.
+- Phase 2 generations with the default `gpt-4.1-mini` pricing in `ai_settings` ($0.40 in / $1.60 out per 1M tokens): LTR AI answer ~3k in / 0.8k out ≈ $0.002; ad package ~2k / 3.5k ≈ $0.006; 30-day social plan ~2k / 12k ≈ $0.02; 90-day strategy ~2k / 10k ≈ $0.017. A Growth user spending all 500 credits costs roughly $1–4/month in AI. Actual costs per tool are shown on `/admin`.
 - Image generation (Phase 2–3): typically $0.02–$0.08 per image; to be metered through credits.
 - Firecrawl / PageSpeed: per their plans; PageSpeed API is free within quota.
 - Supabase free tier is enough for development; Pro (~$25/month) recommended for production.
